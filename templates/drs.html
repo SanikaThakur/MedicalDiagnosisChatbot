@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block main %}
+	<div class = "content-section">
+	<form id="testform" name="testform">		
+	<cf-robot-message cf-questions="Hello"></cf-robot-message>
+	<cf-robot-message cf-questions="Let's get started"></cf-robot-message>
+
+	  {% for question in questionset %}
+	  <div class="card">
+		  <div class="card-body">
+		    <h5 class="card-title">{{ question['text'] }}</h5>
+		    {% if question['type'] == 'text' %}
+		    	<div class="form-check-inline">
+					  <input class="form-check-input" type="text" name="{{ question['items'][0]['id'] }}" value="" cf-questions="{{ question['text'] }}">
+				  </div>
+		    {% elif question['type'] == 'single' %}
+		    	{% for choice in question['items'][0]['choices'] %}
+				  <div class="form-check-inline">
+					  <input class="form-check-input" type="radio" name="{{ question['items'][0]['id'] }}" value="{{ choice['id'] }}" cf-questions="{{ question['text'] }}">{{ choice['label'] }}
+				  </div>
+				  <br>
+		  		{% endfor %}
+		  	{% elif question['type'] == 'group_single' %}
+		    	{% for item in question['items'] %}
+				  <div class="form-check-inline">
+					  <input class="form-check-input" type="radio" name="group_single" value="{{ item['id'] }}" cf-questions="{{ question['text'] }}">{{ item['name'] }}
+				  </div>
+				  <br>
+		  		{% endfor %}
+		    {% elif question['type'] == 'group_multiple' %}
+		    	{% for item in question['items'] %}
+				  <div class="form-check-inline">
+					  <input class="form-check-input" type="checkbox" id = "{{ item['id'] }}" name="{{ item['id'] }}" value="present" cf-questions="{{ question['text'] }}">{{ item['name'] }}
+				  </div>
+				  <br>
+		  		{% endfor %}
+		    {% endif %}
+		  </div>
+	  </div>
+	  <br>
+	  {% endfor %}
+	</form>
+	<div id="cf-context" role="cf-context" cf-context></div>
+</div>
+{% endblock main %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.1/axios.min.js" integrity="sha512-bPh3uwgU5qEMipS/VOmRqynnMXGGSRv+72H/N260MQeXZIK4PG48401Bsby9Nq5P5fz7hy5UGNmC/W1Z51h2GQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+	var synth = window.speechSynthesis;
+	var voices = synth.getVoices();
+
+	speaktext("Hello");
+	speaktext("Let's get started");
+	speaktext("What is your age (in years)?");
+
+	var count = 0
+	var initquests = ["What is your gender?", 
+					"Do you exercise regularly?",
+					"Do you perform strenous work?",
+					"Did your parents have/had diabetes?", 
+					"What is your waist circumference (in cms)?"]
+
+	var dataholder = new Map()
+	var prvsques = ''
+	var sym_source = ''
+	var flowCallback = function(dto, success, error) {
+	
+	  // Serialize the Form to get data
+	  var tempd = $('form').serializeArray();
+	  //  Empty Dictionary to store form data
+	  var formdata = {}
+	  // Loop through the form data and return until initial form ("init" variables) is completed
+	  for (i of tempd){
+			// console.log(i)
+		if (i.name == 'waist' && i.value == ""){
+			success();
+			speaktext(initquests[count]);
+			count = count + 1;
+			return;
+		}
+		// Add all data in the formdata variable
+		formdata[i.name] = i.value
+		}
+
+		// Adding all values from dataholder to formdata
+		for (const [key, value] of dataholder.entries()) {
+			// console.log(key,value)
+			formdata[key] = value;
+		}
+
+		// Making post request to fetch data from API
+		$.post("/drs", {"formdata":JSON.stringify(formdata)}).done(function (response){
+			success();
+			// Call the end diagnosis function
+			sleep(2500);
+			enddiag_gen_report(response.idrs_score, formdata['age'], formdata['sex']);
+
+		});
+	};
+	
+	// CF-form variable required for proper functioning of the Conversational Form
+	var conversationalForm = window.cf.ConversationalForm.startTheConversation({
+		userInterfaceOptions:{
+			controlElementsInAnimationDelay: 250,
+			robot: {
+				robotResponseTime: 0,
+				chainedResponseTime: 600
+			},
+		},
+		formEl: document.getElementById("testform"),
+		hideUserInputOnNoneTextInput:false,
+		flowStepCallback: flowCallback,
+	  submitCallback: function() {
+	  }
+	});
+
+	// Simple Function to mimic behaviour of sleep function in python
+	function sleep(milliseconds) {
+		const date = Date.now();
+		let currentDate = null;
+		do {
+			currentDate = Date.now();
+		} while (currentDate - date < milliseconds);
+	};
+
+	// End Diagnosis Function
+	function enddiag_gen_report(score, age, sex){
+		
+		conversationalForm.addRobotChatResponse("Your Indian Diabetes Risk Score is " + score + ".");
+		speaktext("Your Indian Diabetes Risk Score is " + score + ".");
+
+		conversationalForm.addRobotChatResponse("Significance of this score is as follows:");
+		speaktext("Significance of this score is as follows:");
+
+		if (score <= 30){
+			conversationalForm.addRobotChatResponse("Low Risk Score");
+			speaktext("Low Risk Score");
+		}
+		else if (score >  30 && score < 50){
+			conversationalForm.addRobotChatResponse("Medium Risk Score");
+			speaktext("Medium Risk Score");
+		}
+		else{
+			conversationalForm.addRobotChatResponse("Check Sugar Levels and consult a doctor");
+			speaktext("Check Sugar Levels and consult a doctor");
+		}
+
+		conversationalForm.addRobotChatResponse("You will shortly be redirected to the home page.");
+		speaktext("You will shortly be redirected to the home page.");
+
+		$.post("/sleep", {"sleep_time":30}).done(function (response){
+			window.location.href = "/";
+
+		});
+			
+	};
+		
+	function speaktext(text){
+			var utterThis = new SpeechSynthesisUtterance(text);
+			utterThis.voice = voices[0];
+			synth.speak(utterThis);
+	};
+
+</script>
+{% endblock scripts %}

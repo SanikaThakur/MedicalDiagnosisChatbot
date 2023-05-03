@@ -1,0 +1,7 @@
+flask
+flask-cors
+infermedica-api
+python-pdf
+gunicorn
+flask-weasyprint
+pytz

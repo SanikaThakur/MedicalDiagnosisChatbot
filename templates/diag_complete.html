@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block main %}
+<div class = "content-section">
+	<h1>Diagnosis successfully completed. <a class="btn btn-success" href="{{ url_for('gen_report')}}">Generate Report</a></h1>
+	<h3 class = "alert alert-warning">You should consult a <b>{{doctor}}</b>.</h3>
+	{% if emergency %}
+		<h3 class = "alert alert-danger">You should seek medical attention immediately.</h3>
+	{% else %}
+		<h3 class = "alert alert-info">Following are your results.</h3>
+	{% endif %}
+	
+	{% for condition in conditions %}
+	<div class="card">
+		  <div class="card-header">
+		    {{ condition['name'] }}
+		  </div>
+		  <div class="card-body">
+			<div class="progress">
+				<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="{{ condition['probability']*100 }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ (condition['probability']*100)|int }}%">{{ (condition['probability']*100)|int }}%</div>
+			</div> 
+		  </div>
+	  </div>
+	  <br>
+	{% endfor %}
+</div>
+{% endblock main %}

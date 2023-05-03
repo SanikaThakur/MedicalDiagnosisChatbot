@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, inital_scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link href="https://fonts.googleapis.com/css2?family=Arvo&family=Josefin+Sans&family=Space+Mono:ital@1&display=swap" rel="stylesheet"> 
+
+    <title>Medical Diagnosis Chatbot</title>
+    <style type="text/css">
+
+    	.card {
+    		border: 0pt;
+    		/*background-image: linear-gradient(red, yellow);*/
+    	}
+
+    	.card-title {
+    		    font-family: 'Arvo', serif;
+    	}
+
+    	.card-text {
+    		font-family: 'Josefin Sans', sans-serif;
+    	}
+
+    	.declare {
+    		color:red;
+    		font-family: 'Space Mono', monospace;
+    	}
+
+    </style>
+  </head>
+  <body>
+    <div class="container" id="maincontent">
+    	<div class="row justify-content-center">
+    		<img src="https://diag-bot.herokuapp.com/static/mdc_logo.png" class="img-fluid" style="max-width: 100px;">
+    		<img src="https://diag-bot.herokuapp.com/static/banner.png" class="img-fluid" style="max-width: 500px;">
+    	</div>
+    	<br>
+    	<div class="card" >
+            <div class="row no-gutters">
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="card-body">
+                        <h4 class="card-title">Patient Details</h4>
+                        <p class="card-text">Age: 21</p>
+                        <p class="card-text">Sex: male</p>
+                        <p class="card-text">Report Date: </p>
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <img class="card-img" src="https://diag-bot.herokuapp.com/static/profile_details.svg" alt="Patient Details">
+                </div>
+            </div>
+        </div>
+        <br>
+      <div class="card" >
+            <div class="row no-gutters">
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <img class="card-img" src="https://diag-bot.herokuapp.com/static/diseases.svg" alt="Patient Details">
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="card-body">
+                    		<h4 class="card-title">Diagnosis</h4>
+                        
+                  				<h4 class="card-text">Peritonitis: 45.30%</h4>
+                  				<br>
+                  			
+                  				<h4 class="card-text">Appendicitis: 27.51%</h4>
+                  				<br>
+                  			
+                  				<h4 class="card-text">Viral gastroenteritis: 15.63%</h4>
+                  				<br>
+                  			
+                  				<h4 class="card-text">Shigellosis: 13.30%</h4>
+                  				<br>
+                  			
+                  				<h4 class="card-text">Food poisoning: 12.33%</h4>
+                  				<br>
+                  			
+                  				<h4 class="card-text">Bacterial gastroenteritis: 10.04%</h4>
+                  				<br>
+                  			
+                  				<h4 class="card-text">Lactose intolerance: 8.46%</h4>
+                  				<br>
+                  			
+                  				<h4 class="card-text">Acute pancreatitis: 7.43%</h4>
+                  				<br>
+                  			
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+      <div class="card" >
+            <div class="row no-gutters">
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <div class="card-body">
+                    		<h4 class="card-title">Evidence</h4>
+                        
+                  			<div class="row">
+                  					<h4 class="card-text">Supporting Evidence</h4>
+                  					<ul>
+                  						
+                  						<li class="card-text">Stomach pain</li>
+                  						
+                  						<li class="card-text">Bloating</li>
+                  						
+                  						<li class="card-text">Vomiting</li>
+                  						
+                  						<li class="card-text">Widespread stomach pain</li>
+                  						
+                  						<li class="card-text">Stomach pain lasting less than 2 days</li>
+                  						
+                  						<li class="card-text">Severe stomach pain</li>
+                  						
+                  						<li class="card-text">Stomach pain after dropping hard on heels</li>
+                  						
+                  					</ul>
+                  			</div>
+                  			
+                    </div>
+                </div>
+                <div class="col-sm-6 col-md-6 col-lg-6">
+                    <img class="card-img" src="https://diag-bot.herokuapp.com/static/evidence.svg" alt="Patient Details">
+                </div>
+            </div>
+        </div>
+        <br>  	
+	  <p class="declare" align="center">*Test Conducted by Medical Diagnosis Chatbot App. Consult a doctor before proceeding further.</p>
+    </div>
+    <!-- Bootstrap JS Files-->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+  </body>
+</html>

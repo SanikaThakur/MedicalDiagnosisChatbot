@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% block main %}
+	<div class = "content-section">
+	<form id="testform" name="testform">		
+	<cf-robot-message cf-questions="Hello"></cf-robot-message>
+	<cf-robot-message cf-questions="Let's get started"></cf-robot-message>
+
+	  {% for question in questionset %}
+	  <div class="card">
+		  <div class="card-body">
+		    <h5 class="card-title">{{ question['text'] }}</h5>
+		    {% if question['type'] == 'text' %}
+		    	<div class="form-check-inline">
+					  <input class="form-check-input" type="text" name="{{ question['items'][0]['id'] }}" value="" cf-questions="{{ question['text'] }}">
+				  </div>
+		    {% elif question['type'] == 'single' %}
+		    	{% for choice in question['items'][0]['choices'] %}
+				  <div class="form-check-inline">
+					  <input class="form-check-input" type="radio" name="{{ question['items'][0]['id'] }}" value="{{ choice['id'] }}" cf-questions="{{ question['text'] }}">{{ choice['label'] }}
+				  </div>
+				  <br>
+		  		{% endfor %}
+		  	{% elif question['type'] == 'group_single' %}
+		    	{% for item in question['items'] %}
+				  <div class="form-check-inline">
+					  <input class="form-check-input" type="radio" name="group_single" value="{{ item['id'] }}" cf-questions="{{ question['text'] }}">{{ item['name'] }}
+				  </div>
+				  <br>
+		  		{% endfor %}
+		    {% elif question['type'] == 'group_multiple' %}
+		    	{% for item in question['items'] %}
+				  <div class="form-check-inline">
+					  <input class="form-check-input" type="checkbox" id = "{{ item['id'] }}" name="{{ item['id'] }}" value="present" cf-questions="{{ question['text'] }}">{{ item['name'] }}
+				  </div>
+				  <br>
+		  		{% endfor %}
+		    {% endif %}
+		  </div>
+	  </div>
+	  <br>
+	  {% endfor %}
+	</form>
+	<div id="cf-context" role="cf-context" cf-context></div>
+</div>
+{% endblock main %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.26.1/axios.min.js" integrity="sha512-bPh3uwgU5qEMipS/VOmRqynnMXGGSRv+72H/N260MQeXZIK4PG48401Bsby9Nq5P5fz7hy5UGNmC/W1Z51h2GQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+	var synth = window.speechSynthesis;
+	var voices = synth.getVoices();
+
+	speaktext("Hello");
+	speaktext("Let's get started");
+	speaktext("What is your age (in years)?");
+
+	var count = 0
+	var initquests = ["What is your gender?","Region of Residence", "How can I help you today?"]
+
+	var dataholder = new Map()
+	var initialEvidence = {}
+	var prvsques = ''
+	var sym_source = ''
+	var sleep_time = 0
+	var flowCallback = function(dto, success, error) {
+	
+	  // Serialize the Form to get data
+	  var tempd = $('form').serializeArray();
+	  //  Empty Dictionary to store form data
+	  var formdata = {}
+	  // Loop through the form data and return until initial form ("init" variables) is completed
+	  for (i of tempd){
+		if (i.name == 'initQ' && i.value == ""){
+			success();
+			speaktext(initquests[count]);
+			count = count + 1;
+			return;
+		}
+		// Add all data in the formdata variable
+		formdata[i.name] = i.value
+		}
+		
+		// Just to avoid re-entering answers to questions
+		if (prvsques != undefined){
+			prepresponse(prvsques, dto.tag._values, sym_source);
+		}
+
+		// Default value for storing initial evidence (initLoc, initQ)
+		formdata['initialEvidence'] = 'NO'
+
+		// Adding all values from dataholder to formdata
+		for (const [key, value] of dataholder.entries()) {
+			formdata[key] = value;
+			formdata['initialEvidence'] = 'YES'
+		}
+
+		// Making post request to fetch data from API
+		$.post("/bot_say", {"formdata":JSON.stringify(formdata), "initial_evidence":JSON.stringify(initialEvidence)}).done(function (response){
+	
+			
+			// Check if diagnosis has to continue
+			if (response.stop_flag == "False"){
+				// Add Next Question
+				addnextqcf(response.next_question);
+				// Update value of variable
+				prvsques = response.next_question;
+				// Get question source (suggest / red_flags) for proper processing
+				sym_source = response.source;
+				// Set value in initialEvidence to newly fetched initialEvidence
+				initialEvidence = response.initial_evidence
+				
+				// Continue conversation
+				success();
+			}
+			// End Diagnosis
+			else{
+				// End Conversation
+				success();
+				// Call the end diagnosis function
+				enddiag_gen_report(response.doctor, response.conditions, response.emergency, response.explained, formdata['initAge'], formdata['initSex']);
+			}
+			
+
+		});
+	};
+	
+	// CF-form variable required for proper functioning of the Conversational Form
+	var conversationalForm = window.cf.ConversationalForm.startTheConversation({
+		formEl: document.getElementById("testform"),
+		hideUserInputOnNoneTextInput:false,
+		flowStepCallback: flowCallback,
+	  submitCallback: function() {
+		conversationalForm.addRobotChatResponse("You are done. Thank you.");
+	  }
+	});
+
+	// Simple Function to mimic behaviour of sleep function in python
+	function sleep(milliseconds) {
+		const date = Date.now();
+		let currentDate = null;
+		do {
+			currentDate = Date.now();
+		} while (currentDate - date < milliseconds);
+	};
+
+	// End Diagnosis Function
+	function enddiag_gen_report(doctor, conditions, emergency, explained, age, sex){
+		
+		conversationalForm.addRobotChatResponse("Diagnosis Successfully Completed.");
+		speaktext("Diagnosis Successfully Completed.");
+		sleep_time += 3
+
+		conversationalForm.addRobotChatResponse("You should consult a " + doctor + ".");
+		speaktext("You should consult a " + doctor + ".");
+		sleep_time += 5
+		
+		if (emergency == true){
+			conversationalForm.addRobotChatResponse("You should seek medical attention immediately.");
+			speaktext("You should seek medical attention immediately.");
+			sleep_time += 6
+		}
+		conversationalForm.addRobotChatResponse("Following are your results.");
+		speaktext("Following are your results.");
+		sleep_time += 4
+		
+		for(condition of conditions){
+			var prob = (condition['probability']*100).toFixed(2).toString();
+			conversationalForm.addRobotChatResponse(condition["name"] + " : " + prob + "%");
+			speaktext(condition["name"] + " : " + prob + "%");
+			sleep_time += 5
+		}
+
+		// Redirect to home page
+		conversationalForm.addRobotChatResponse("You will shortly be redirected to the home page.");
+		speaktext("You will shortly be redirected to the home page.");
+		sleep_time += 10
+
+		gen_report(conditions, explained, age, sex);
+		redirectToHome(sleep_time);
+
+	};
+
+	// Function to prepare data for python to process response
+	function prepresponse(question, choices, sym_source){
+		if (question.type=="single"){
+			dataholder.set(question.items[0].id,[choices[0],sym_source]);
+		}
+		else if (question.type=="group_single"){
+			dataholder.set(choices[0],["present", sym_source]);
+		}
+		else if (question.type=="group_multiple"){
+			for (choice of choices){
+				dataholder.set(choice,["present", sym_source]);
+			}
+		}
+	};
+	
+	// Function to dynamically add new question
+	function addnextqcf(qdata){
+			// console.log(qdata)
+	
+			if (qdata.type == "single"){
+				window.ConversationalForm.addTags([
+				{
+					tag: "fieldset",
+					"cf-questions": qdata.text,
+					children: processtschildren(qdata.items[0].choices),
+				}
+				]);
+			}
+	
+			else if (qdata.type == "group_single") {
+				// console.log("Entered gs")
+	
+				window.ConversationalForm.addTags([
+				{
+					tag: "fieldset",
+					"cf-questions": qdata.text,
+					children: processgschildren(qdata.items),
+
+				}
+				]);
+			}
+	
+			else if (qdata.type == "group_multiple") {
+
+				window.ConversationalForm.addTags([
+					{
+						tag: "fieldset",
+						type:"Checkboxes",
+						"cf-questions": qdata.text,
+						children: processgmchildren(qdata.items),
+					}
+					]);
+			}
+
+			speaktext(qdata.text);
+	};
+
+	// Function to process option/choice fields in single question type
+	function processtschildren(options){
+		processedOptions = []
+		for (option of options){
+			processedOptions.push(
+				{"tag":"input", "type": "radio", "cf-label":option.label, "value":option.id,}
+			)
+		}
+		return processedOptions
+	};
+
+	// Function to process option/choice fields in group_single question type
+	function processgschildren(options){
+		processedOptions = []
+		for (option of options){
+			processedOptions.push(
+				{"tag":"input", "type": "radio", "cf-label":option.name, "value":option.id}
+			)
+		}
+		return processedOptions
+	};
+
+	// Function to process option/choice fields in group_multiple question type
+	function processgmchildren(options){
+		// console.log("Options in GM")
+		
+		processedOptions = []
+		for (option of options){
+			processedOptions.push(
+				{"tag":"input", "type": "checkbox", "cf-label":option.name, "value":option.id, "name":"group_multiple"}
+			)
+		}
+		return processedOptions
+	};
+
+	function speaktext(text){
+		var utterThis = new SpeechSynthesisUtterance(text);
+		utterThis.voice = voices[0];
+		synth.speak(utterThis);
+	};
+
+	function gen_report(conditions, explained, age, sex){
+		axios({
+				method: "post",
+				url: "/report",
+				data: {
+					"conditions":JSON.stringify(conditions), 
+					"explained":JSON.stringify(explained), 
+					"pd":JSON.stringify({"age":age, "sex":sex})
+				},
+				responseType: 'arraybuffer'
+			}).then(function (response){
+				console.log(response)
+				var blob = new Blob([response.data], {type: 'application/pdf'});
+				var link = document.createElement('a');
+				link.href = window.URL.createObjectURL(blob);
+				link.download = "report.pdf";
+				link.click();
+			}).catch(function(error){
+				console.log("Recursive Call")
+				gen_report(conditions, explained, age, sex);
+			});
+	};
+
+	function redirectToHome(sleep_time){
+		axios({
+				method: "post",
+				url: "/sleep",
+				data: {
+					"sleep_time":sleep_time, 
+				},
+			}).then(function (response){
+				window.location.href = "/";
+			}).catch(function(error){
+				console.log(error)
+			});
+	};
+
+</script>
+{% endblock scripts %}
